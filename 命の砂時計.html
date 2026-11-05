@@ -1,0 +1,1072 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>命の砂時計</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: form column on the left, sticky ruler summary on the right; advice and factor breakdown run full width below. */
+:root {
+  --bg: #f7f2e9;
+  --surface: #fffcf6;
+  --fg: #2a2118;
+  --muted: #6a5d4b;
+  --line: #e4d9c6;
+  --accent: #8a4b12;
+  --accent-ink: #ffffff;
+  --accent-soft: #f4e7d2;
+  --gain: #2b7a4a;
+  --gain-soft: #e0f1e6;
+  --loss: #bd4027;
+  --loss-soft: #f8e3dd;
+  --avg: #a69a87;
+  --sand: #d9a23f;
+  --display: "Shippori Mincho B1", "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15110c;
+    --surface: #1e1912;
+    --fg: #f2eadd;
+    --muted: #b5a891;
+    --line: #372e21;
+    --accent: #e8b45c;
+    --accent-ink: #15110c;
+    --accent-soft: #3b2d17;
+    --gain: #6fd09a;
+    --gain-soft: #173326;
+    --loss: #ff8c72;
+    --loss-soft: #3a1d18;
+    --avg: #7f725e;
+  --sand: #e8b45c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15110c;
+  --surface: #1e1912;
+  --fg: #f2eadd;
+  --muted: #b5a891;
+  --line: #372e21;
+  --accent: #e8b45c;
+  --accent-ink: #15110c;
+  --accent-soft: #3b2d17;
+  --gain: #6fd09a;
+  --gain-soft: #173326;
+  --loss: #ff8c72;
+  --loss-soft: #3a1d18;
+  --avg: #7f725e;
+  --sand: #e8b45c;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.75;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px);
+  background: var(--surface);
+  z-index: 30;
+}
+h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; line-height: 1.4; text-wrap: balance; }
+p { margin: 0; }
+b { font-weight: 700; }
+.wrap { max-width: 1120px; margin: 0 auto; }
+
+/* mini bar (phones) */
+/* masthead */
+.masthead { padding-block: 32px 24px; max-width: 720px; }
+.masthead .eyebrow { font-size: 12px; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 8px; }
+.masthead h1 { font-size: clamp(30px, 6vw, 44px); letter-spacing: 0.04em; }
+.masthead p { margin-top: 12px; color: var(--muted); max-width: 52ch; }
+
+.layout { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 40px; }
+  .summary { position: sticky; top: 16px; }
+}
+
+/* form */
+.form { display: grid; gap: 28px; }
+.fgroup { display: grid; gap: 20px; }
+.fgroup > h2 { font-size: 19px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 8px; }
+legend { padding: 0; font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+.hint { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { position: relative; display: block; }
+.pill input { position: absolute; opacity: 0; pointer-events: none; inset: 0; }
+.pill span {
+  display: block;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 13.5px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.pill:hover span { border-color: var(--accent); }
+.pill input:checked + span { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.pill input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.num-field label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+.num-field input {
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.bmi-read { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bmi-read b { color: var(--fg); }
+.form-note { font-size: 13px; color: var(--loss); }
+
+.empty-msg { padding: 24px 0; color: var(--muted); }
+/* summary */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+.tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); margin-bottom: 10px; }
+.s-eyebrow { font-size: 13px; color: var(--muted); }
+.hero { display: flex; align-items: baseline; gap: 6px; line-height: 1.1; margin-top: 2px; }
+.hero .num { font-family: var(--display); font-weight: 700; font-size: clamp(68px, 10vw, 104px); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.hero .unit { font-family: var(--display); font-size: 28px; font-weight: 700; }
+.lead { margin-top: 6px; font-size: 14px; }
+.up { color: var(--gain); font-weight: 700; }
+.down { color: var(--loss); font-weight: 700; }
+.ruler { position: relative; margin-top: 22px; }
+.scale { position: relative; height: 18px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.scale span { position: absolute; top: 0; transform: translateX(-50%); }
+.rows { position: relative; display: grid; gap: 12px; padding-top: 4px; }
+.gl { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
+.gl.now { background: var(--accent); opacity: 0.5; }
+.row { position: relative; z-index: 1; }
+.rowhead { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; margin-bottom: 3px; gap: 8px; }
+.rowhead b { font-family: var(--display); font-size: 17px; font-variant-numeric: tabular-nums; }
+.track { position: relative; height: 12px; }
+.bar { position: absolute; top: 0; height: 100%; border-radius: 2px; }
+.bar.avg { background: var(--avg); }
+.bar.cur { background: var(--accent); }
+.bar.imp { background: var(--gain); }
+.nowlabel { position: relative; height: 20px; font-size: 11.5px; color: var(--accent); font-weight: 700; margin-top: 4px; }
+.nowlabel span { position: absolute; top: 0; white-space: nowrap; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 18px 0 0; padding-top: 16px; border-top: 1px solid var(--line); }
+.stats dt { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.stats dd { margin: 2px 0 0; font-family: var(--display); font-weight: 700; font-size: 20px; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.stats dd small { display: block; font-family: var(--body); font-weight: 500; font-size: 12px; color: var(--gain); }
+.empty-msg { padding: 24px 0; color: var(--muted); }
+
+/* sections below */
+.below { display: grid; gap: 48px; margin-top: 56px; }
+.sec-head { display: grid; gap: 6px; margin-bottom: 16px; }
+.sec-head h2 { font-size: clamp(22px, 4vw, 28px); }
+.sec-head p { color: var(--muted); max-width: 62ch; }
+.total-line { margin-top: 12px; padding: 12px 16px; background: var(--gain-soft); border-radius: 8px; font-weight: 500; }
+.total-line b { color: var(--gain); font-family: var(--display); font-size: 18px; }
+.tips { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
+.tip { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.tip h3 { font-size: 18px; }
+.tip .tip-gain { font-family: var(--display); font-weight: 700; font-size: 24px; color: var(--gain); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tip .tip-body { grid-column: 1 / -1; max-width: 66ch; }
+.tip .tip-foot { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.tip .goal { font-size: 13px; color: var(--muted); min-width: 0; flex: 1 1 240px; }
+.tip .goal b { color: var(--fg); }
+.pill.on input:checked + span { background: var(--gain); border-color: var(--gain); color: var(--accent-ink); }
+.ok-msg { padding: 18px 0; border-top: 1px solid var(--line); color: var(--muted); }
+
+.factors { display: grid; border-top: 1px solid var(--line); }
+.frow { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr) 64px; gap: 6px 16px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.frow .fl { min-width: 0; line-height: 1.5; }
+.frow .fl b { display: block; font-size: 14px; }
+.frow .fl span { font-size: 12.5px; color: var(--muted); }
+.dv { position: relative; height: 12px; }
+.dv::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--muted); opacity: 0.5; }
+.dv i { position: absolute; top: 0; height: 100%; border-radius: 2px; }
+.dv i.pos { left: 50%; background: var(--gain); }
+.dv i.neg { right: 50%; background: var(--loss); }
+.fv { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 14px; }
+@media (max-width: 560px) {
+  .frow { grid-template-columns: minmax(0, 1fr) 64px; }
+  .frow .dv { grid-column: 1 / -1; grid-row: 2; }
+}
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; margin-bottom: 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { display: inline-block; width: 22px; height: 0; border-top: 3px solid; }
+.legend i.l-avg { border-color: var(--avg); border-top-style: dashed; }
+.legend i.l-cur { border-color: var(--accent); }
+.legend i.l-imp { border-color: var(--gain); }
+.chart { padding: 12px; }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart text { fill: var(--muted); font-family: var(--body); font-size: 11px; }
+.chart .gridline { stroke: var(--line); stroke-width: 1; }
+.chart .axisline { stroke: var(--muted); stroke-width: 1; }
+.chart .ln { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.chart .ln.avg { stroke: var(--avg); stroke-dasharray: 5 4; stroke-width: 2; }
+.chart .ln.cur { stroke: var(--accent); }
+.chart .ln.imp { stroke: var(--gain); }
+.chart .dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.chart .mlabel { fill: var(--accent); font-weight: 700; font-size: 12px; }
+.chart .drop { stroke: var(--accent); stroke-dasharray: 3 3; stroke-width: 1; opacity: 0.7; }
+
+.notes { font-size: 13px; color: var(--muted); display: grid; gap: 10px; max-width: 78ch; padding-top: 24px; border-top: 1px solid var(--line); }
+.notes h2 { font-size: 16px; color: var(--fg); }
+.notes ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+
+.btn { font: inherit; font-size: 13px; font-weight: 700; padding: 7px 12px; border: 1px solid var(--accent); background: transparent; color: var(--accent); border-radius: 6px; cursor: pointer; }
+.btn:hover { background: var(--accent-soft); }
+.btn:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Controls, hourglass and risk badges */
+#surveyPage { max-width: 760px; margin-inline: auto; }
+.result-actions { max-width: 760px; margin: 0 auto 18px; }
+.page-actions { margin-top: 28px; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; text-align: center; }
+.primary-btn { font: inherit; font-size: 15px; font-weight: 700; padding: 13px 28px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-ink); cursor: pointer; transition: filter .15s, transform .15s; }
+.primary-btn:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+.primary-btn:disabled { opacity: .45; cursor: not-allowed; }
+.primary-btn:focus-visible, .btn:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.top { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 16px; align-items: center; }
+.glass svg { display: block; width: 100%; height: auto; }
+.glass .gl-outline { fill: none; stroke: var(--fg); stroke-width: 3; stroke-linejoin: round; }
+.glass .cap { fill: var(--fg); }
+.glass .sa { fill: var(--sand); }
+.glass .sg { fill: var(--gain); }
+.glass .stream { stroke: var(--sand); stroke-width: 2; stroke-dasharray: 2 5; stroke-linecap: round; animation: fall .9s linear infinite; }
+@keyframes fall { to { stroke-dashoffset: -14; } }
+@media (prefers-reduced-motion: reduce) { .glass .stream { animation: none; } }
+.gcap { display: flex; justify-content: space-between; gap: 4px; font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+.gcap b { display: block; font-family: var(--display); font-size: 14px; color: var(--fg); font-variant-numeric: tabular-nums; }
+.gcap .g { color: var(--gain); font-weight: 700; }
+.risks { display: grid; gap: 24px 32px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.risks h3 { font-size: 18px; margin-bottom: 8px; }
+.rk { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.rk li { padding: 14px 0; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
+.rk-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.rk-h b { font-family: var(--display); font-size: 16px; }
+.lv { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 4px; white-space: nowrap; }
+.lv.hi { background: var(--loss-soft); color: var(--loss); }
+.lv.mid { background: var(--accent-soft); color: var(--accent); }
+.rk-why { font-size: 13px; color: var(--muted); }
+.rk-tip { font-size: 13px; }
+.risk-note { margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+/* Final layout refinements */
+.result-actions { margin-bottom: 18px; }
+#resultsPage .summary { max-width: 760px; margin-inline: auto; }
+#resultsPage .below { margin-top: 40px; }
+.day-count { display: inline-block; margin-top: 12px; padding: 10px 12px; border-radius: 7px; background: var(--accent-soft); color: var(--muted); font-size: 13px; }
+.day-count b { margin-inline: 4px; color: var(--fg); font: 700 24px var(--display); font-variant-numeric: tabular-nums; }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">HOURGLASS OF LIFE</p>
+    <h1>命の砂時計</h1>
+    <p>命を一つの砂時計にたとえ、あなたの砂があと何年分残っているかを、統計をもとに推定します。どの習慣を変えると、砂をどれだけ長く保てるかもあわせて表示します。</p>
+  </header>
+<main id="surveyPage">    <form class="form" id="form" autocomplete="off" onsubmit="return false">
+      <section class="fgroup" id="g-basic"></section>
+      <section class="fgroup" id="g-life"></section>
+      <section class="fgroup" id="g-health"></section>
+      <section class="fgroup" id="g-mind"></section>
+      <p class="privacy-note">入力内容はこのページ内で計算に使われます。</p>
+      <div class="page-actions"><button class="primary-btn" type="button" id="showResults" disabled>回答して結果を見る</button></div>
+    </form>  </main>
+  <main id="resultsPage" hidden>
+    <div class="result-actions"><button class="btn" type="button" id="editAnswers">← 回答を編集</button></div>
+    <aside class="summary" id="summary" aria-live="polite">
+      <div class="panel"><div class="empty-msg" id="emptyMsg" hidden>アンケートに回答すると結果を表示します。</div><div id="sumBody">
+          <div class="top">
+            <div class="glass" id="glass"></div>
+            <div>
+              <p class="s-eyebrow">砂時計に残された時間</p>
+              <div class="hero"><span class="num" id="heroNum">--</span><span class="unit">年</span></div>
+              <p class="lead" id="heroLead"></p><p class="day-count">推定残り日数の目安 <b id="dayCount" aria-live="polite" aria-atomic="true">--</b>日</p>
+            </div>
+          </div>
+          <div class="ruler" id="ruler"></div>
+          <dl class="stats" id="stats"></dl>
+        </div>
+      </div>
+    </aside>
+  <div class="below" id="below">
+    <section id="adviceSec">
+      <div class="sec-head">
+        <h2>砂を長く保つためのアドバイス</h2>
+        <p>あなたの入力内容から、延びる年数が大きい順に並べています。「実行する」を切り替えると、上の砂時計に反映されます。</p>
+        <div class="total-line" id="totalLine" hidden></div>
+      </div>
+      <div id="adviceList"></div>
+    </section>
+
+    <section id="factorSec">
+      <div class="sec-head">
+        <h2>いまの砂を増減させている要因</h2>
+        <p>それぞれの項目が、あなたの砂を平均的な場合と比べて何年分増やし、または減らしているかを示します。</p>
+      </div>
+      <div class="factors" id="factors"></div>
+    </section>
+
+    <section id="riskSec">
+      <div class="sec-head">
+        <h2>かかりやすい病気の傾向</h2>
+        <p>入力内容から、統計的に注意したい病気を、当てはまる度合いの高い順に挙げます。</p>
+      </div>
+      <div id="diseaseList"></div>
+      <p class="risk-note">疫学研究での一般的な傾向にもとづく目安です。診断や発症の予測ではなく、「該当なし」でも病気にならないわけではありません。症状があるときは医療機関へ。</p>
+    </section>
+
+
+
+    <section class="notes">
+      <h2>この砂時計について</h2>
+      <p>このアプリの結果は、平均寿命の統計と、疫学研究で報告されている生活習慣・病気とのかかわりをもとにした概算です。診断や医学的な助言ではなく、個人の実際の寿命を予測するものではありません。同じ条件の人でも寿命は大きくばらつきます。健康上の不安や治療中の病気がある場合は、かかりつけ医に相談してください。</p>
+      <ul>
+        <li>基準値: 厚生労働省「簡易生命表」の近年の値(平均寿命は男性約81歳、女性約87歳)に合わせて調整しています。</li>
+        <li>喫煙: Jha ほか, N Engl J Med 2013。運動: Moore ほか, PLoS Med 2012。生活習慣の組み合わせ: Li ほか, Circulation 2018。</li>
+        <li>つながり: Holt-Lunstad ほか, PLoS Med 2010。生きがい: Sone ほか, Psychosom Med 2008(大崎コホート)。日本人のBMI: Sasazuki ほか, J Epidemiol 2011。</li>
+        <li>各項目の効果は上記などをもとにした概算値で、複数の項目が重なる場合は上限をかけて控えめに計算しています。</li>
+      </ul>
+    </section>
+
+  </div>  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- mortality model ---------- */
+  // Gompertz-Makeham hazard h(x) = c + h65 * exp(b * (x - 65)), fitted to Japanese remaining life expectancy at ages 20-90.
+  var MODEL = {
+    M: { c: 0.00022991, h: 0.00919162, b: 0.11052141 },
+    F: { c: 0.00046301, h: 0.00291588, b: 0.13687472 }
+  };
+  var BETA = 0.105; // hazard ratio per "age-equivalent year" of risk shift
+  var STEP = 0.25;
+
+  function curve(sex, age, delta) {
+    var m = MODEL[sex];
+    var hr = Math.exp(-BETA * delta); // negative delta (risk) raises the hazard
+    var k = hr * m.h * Math.exp(m.b * (age - 65)) / m.b;
+    var tmax = Math.max(8, 125 - age);
+    var n = Math.ceil(tmax / STEP);
+    var S = new Float64Array(n + 1);
+    var mean = 0, median = null;
+    for (var i = 0; i <= n; i++) {
+      var t = i * STEP;
+      S[i] = Math.exp(-(m.c * t + k * (Math.exp(m.b * t) - 1)));
+      if (i > 0) {
+        mean += (S[i] + S[i - 1]) / 2 * STEP;
+        if (median === null && S[i] < 0.5) {
+          median = t - STEP + STEP * (S[i - 1] - 0.5) / (S[i - 1] - S[i]);
+        }
+      }
+    }
+    if (median === null) median = tmax;
+    return {
+      mean: mean,
+      median: median,
+      age: age,
+      at: function (a) {
+        var x = (a - age) / STEP;
+        if (x <= 0) return 1;
+        var j = Math.floor(x);
+        if (j >= n) return S[n];
+        return S[j] + (S[j + 1] - S[j]) * (x - j);
+      }
+    };
+  }
+
+  function compress(total) {
+    return total >= 0 ? 12 * Math.tanh(total / 12) : -22 * Math.tanh(-total / 22);
+  }
+
+  /* ---------- factor definitions (d = age-equivalent years vs. an average Japanese person) ---------- */
+  var FACTORS = [
+    { id: "smoke", group: "life", label: "喫煙", hint: "加熱式たばこも含めて選んでください。", options: [
+      { v: "never", t: "吸わない", d: 1 },
+      { v: "ex10", t: "やめて10年以上", d: -0.5 },
+      { v: "exrecent", t: "やめて10年未満", d: -2.5 },
+      { v: "low", t: "1日10本未満", d: -5 },
+      { v: "mid", t: "1日10〜19本", d: -7.5 },
+      { v: "high", t: "1日20本以上", d: -10 }
+    ]},
+    { id: "alcohol", group: "life", label: "飲酒", hint: "1合は純アルコール約20g。ビール500ml、ワイン180ml、缶チューハイ(7%)350mlもほぼ同じ量です。", options: [
+      { v: "none", t: "ほとんど飲まない", d: 0 },
+      { v: "mod", t: "週に数回・少量", d: 0 },
+      { v: "d1", t: "毎日1合ほど", d: -0.5 },
+      { v: "d2", t: "毎日2合ほど", d: -2.5 },
+      { v: "d3", t: "毎日3合以上", d: -6 }
+    ]},
+    { id: "exercise", group: "life", label: "運動", hint: "早歩き、自転車、ジョギングなど、少し息が弾む運動の合計時間です。", options: [
+      { v: "none", t: "ほとんどしない", d: -1.5 },
+      { v: "light", t: "散歩程度", d: 0 },
+      { v: "mod", t: "週150分ほど", d: 2 },
+      { v: "high", t: "週300分以上", d: 3 }
+    ]},
+    { id: "sleep", group: "life", label: "睡眠時間(平日の平均)", options: [
+      { v: "lt5", t: "5時間未満", d: -2.5 },
+      { v: "5", t: "5〜6時間", d: -1 },
+      { v: "6", t: "6〜7時間", d: 0 },
+      { v: "7", t: "7〜8時間", d: 0.3 },
+      { v: "8", t: "8〜9時間", d: 0 },
+      { v: "9", t: "9時間以上", d: -1.5 }
+    ]},
+    { id: "diet", group: "life", label: "食事", options: [
+      { v: "good", t: "野菜・魚・大豆が中心でバランス良好", d: 1.5 },
+      { v: "normal", t: "ふつう", d: 0 },
+      { v: "poor", t: "外食・加工食品・塩分が多く偏りがち", d: -2 }
+    ]},
+    { id: "checkup", group: "life", label: "健康診断・がん検診", options: [
+      { v: "yes", t: "毎年受けている", d: 0.5 },
+      { v: "no", t: "受けていない", d: -1 }
+    ]},
+    { id: "bp", group: "health", label: "血圧", hint: "健診結果や家庭血圧をもとに選んでください。", options: [
+      { v: "unknown", t: "わからない", d: 0 },
+      { v: "normal", t: "正常(130/85未満)", d: 0.5 },
+      { v: "hn", t: "やや高め(130〜139/85〜89)", d: -0.5 },
+      { v: "tr", t: "高血圧で治療中", d: -1.5 },
+      { v: "ut", t: "140/90以上で未治療", d: -3.5 }
+    ]},
+    { id: "sugar", group: "health", label: "血糖", options: [
+      { v: "unknown", t: "わからない", d: 0 },
+      { v: "normal", t: "異常なし", d: 0.3 },
+      { v: "pre", t: "予備群(HbA1c 5.7〜6.4%)", d: -1 },
+      { v: "dmok", t: "糖尿病・管理良好", d: -3 },
+      { v: "dmng", t: "糖尿病・管理不十分", d: -6 }
+    ]},
+    { id: "stress", group: "mind", label: "ストレス", options: [
+      { v: "low", t: "少ない", d: 0.5 },
+      { v: "normal", t: "ふつう", d: 0 },
+      { v: "high", t: "強く、長く続いている", d: -1.5 }
+    ]},
+    { id: "social", group: "mind", label: "人との交流", options: [
+      { v: "rich", t: "家族や友人とよく会う・話す", d: 1 },
+      { v: "normal", t: "ふつう", d: 0 },
+      { v: "lonely", t: "ほとんど交流がない", d: -2.5 }
+    ]},
+    { id: "ikigai", group: "mind", label: "生きがい", options: [
+      { v: "yes", t: "ある", d: 1 },
+      { v: "normal", t: "どちらともいえない", d: 0 },
+      { v: "none", t: "ない", d: -1.5 }
+    ]},
+    { id: "family", group: "mind", label: "家族の寿命(両親・祖父母)", options: [
+      { v: "long", t: "85歳以上の長寿が多い", d: 1.5 },
+      { v: "normal", t: "ふつう", d: 0 },
+      { v: "early", t: "65歳未満で心臓病・脳卒中・がんにより亡くなった人がいる", d: -2 }
+    ]}
+  ];
+  var CONDS = [
+    { v: "heart", t: "心筋梗塞・狭心症", d: -4 },
+    { v: "stroke", t: "脳卒中", d: -4 },
+    { v: "cancer", t: "がん(治療中、または治療後5年以内)", d: -3 },
+    { v: "ckd", t: "慢性腎臓病", d: -3 },
+    { v: "copd", t: "慢性の肺疾患(COPDなど)", d: -3 }
+  ];
+
+  function findF(id) { for (var i = 0; i < FACTORS.length; i++) if (FACTORS[i].id === id) return FACTORS[i]; return null; }
+  function optD(id, v, s) {
+    var f = findF(id), o = null;
+    for (var i = 0; i < f.options.length; i++) if (f.options[i].v === v) o = f.options[i];
+    var d = o ? o.d : 0;
+    if (id === "alcohol" && s.sex === "F" && d < 0) d *= 1.4;
+    return d;
+  }
+  function optT(id, v) {
+    var f = findF(id);
+    for (var i = 0; i < f.options.length; i++) if (f.options[i].v === v) return f.options[i].t;
+    return "";
+  }
+  function bmiOf(s) { var h = s.height / 100; return s.weight / (h * h); }
+  function bmiD(b) {
+    if (b < 18.5) return -3;
+    if (b < 21) return -0.5;
+    if (b < 27) return 0;
+    if (b < 30) return -1;
+    if (b < 35) return -3;
+    return -6;
+  }
+  function isValid(s) {
+    return (s.sex === "M" || s.sex === "F") && s.age >= 18 && s.age <= 100 && s.height >= 120 && s.height <= 220 && s.weight >= 30 && s.weight <= 250;
+  }
+
+  // Returns the list of risk parts with their current d, applying overrides (id -> d).
+  function calc(s, ov) {
+    var parts = [], raw = 0, i, d;
+    for (i = 0; i < FACTORS.length; i++) {
+      var f = FACTORS[i];
+      d = (ov && ov[f.id] !== undefined) ? ov[f.id] : optD(f.id, s[f.id], s);
+      parts.push({ id: f.id, label: f.label, text: optT(f.id, s[f.id]), d: d });
+      raw += d;
+    }
+    var b = bmiOf(s);
+    d = (ov && ov.bmi !== undefined) ? ov.bmi : bmiD(b);
+    parts.push({ id: "bmi", label: "体格(BMI)", text: "BMI " + b.toFixed(1), d: d });
+    raw += d;
+    var cd = 0, names = [];
+    for (i = 0; i < CONDS.length; i++) {
+      if (s.cond.indexOf(CONDS[i].v) >= 0) { cd += CONDS[i].d; names.push(CONDS[i].t.replace(/(.*)/, "$1")); }
+    }
+    parts.push({ id: "cond", label: "これまでの病気", text: names.length ? names.join("、") : "なし", d: cd });
+    raw += cd;
+    var comp = compress(raw);
+    return { parts: parts, raw: raw, comp: comp, c: curve(s.sex, s.age, comp) };
+  }
+
+  /* ---------- improvements ---------- */
+  function improvements(s, cur) {
+    var list = [];
+    var h = s.height / 100;
+    function push(id, title, toD, body, goal) {
+      var ov = {}; ov[id] = toD;
+      var gain = calc(s, ov).c.mean - cur.c.mean;
+      if (gain >= 0.15) list.push({ id: id, title: title, toD: toD, gain: gain, body: body, goal: goal });
+    }
+
+    var sm = s.smoke;
+    if (sm === "low" || sm === "mid" || sm === "high") {
+      push("smoke", "禁煙する", optD("smoke", "ex10", s),
+        "喫煙を続けると、吸わない人より寿命が約10年短くなるという大規模研究があります。禁煙は何歳からでも効果があり、早くやめるほど取り戻せる年数が大きくなります。自力が難しければ、条件を満たすと保険で受けられる禁煙外来が役立ちます。",
+        "目標は <b>完全禁煙</b>。やめて10年たつと、リスクは吸わない人にかなり近づきます。");
+    } else if (sm === "exrecent") {
+      push("smoke", "禁煙を続ける", optD("smoke", "ex10", s),
+        "禁煙後は年数がたつほど、心臓病・脳卒中・肺がんのリスクが下がっていきます。再び吸い始めないことが何より大切です。",
+        "目標は <b>禁煙の継続</b>。10年を超えると影響はかなり小さくなります。");
+    }
+
+    if (s.alcohol === "d1" || s.alcohol === "d2" || s.alcohol === "d3") {
+      push("alcohol", "お酒を適量にする", optD("alcohol", "mod", s),
+        "毎日の飲酒量が多いほど、がん・肝臓病・脳卒中のリスクが上がります。厚生労働省のガイドラインでは、生活習慣病のリスクが高まる量を、純アルコールで男性40g以上、女性20g以上(1日あたり)としています。",
+        "目標は <b>1日20g以下</b>(日本酒1合・ビール500ml程度)で、週2日は休肝日をつくること。");
+    }
+
+    var bmi = bmiOf(s);
+    if (bmi >= 27) {
+      var tw = 24.9 * h * h;
+      push("bmi", "体重を整える", bmiD(24.9),
+        "BMIが高いほど、糖尿病・高血圧・心臓病・一部のがんのリスクが上がります。急に減らさず、1か月に1〜2kg程度のペースで、食事の量と運動の両方から進めるのが続けやすい方法です。",
+        "目標は <b>約" + tw.toFixed(1) + "kg未満</b>(BMI 24.9)。あと約 <b>" + (s.weight - tw).toFixed(1) + "kg</b>。");
+    } else if (bmi < 18.5) {
+      var lw = 20 * h * h;
+      push("bmi", "体重を増やす", bmiD(20),
+        "やせすぎは、感染症や骨折、栄養不足による体力低下のリスクを高めます。主食とたんぱく質(肉・魚・卵・大豆・乳製品)をしっかりとり、筋力トレーニングを組み合わせると、脂肪だけでなく筋肉も増やせます。",
+        "目標は <b>約" + lw.toFixed(1) + "kg</b>(BMI 20)。あと約 <b>" + (lw - s.weight).toFixed(1) + "kg</b>。");
+    }
+
+    if (s.exercise === "none" || s.exercise === "light") {
+      push("exercise", "運動を週150分にする", optD("exercise", "mod", s),
+        "週150分ほどの運動で、運動しない人より寿命が3年前後長いという報告があります。まとめて行う必要はなく、1回10分でも合計に数えられます。",
+        "目標は <b>早歩き30分×週5日</b>。階段を使う、一駅歩くなど、日常の中で積み上げます。");
+    } else if (s.exercise === "mod") {
+      push("exercise", "運動をさらに増やす", optD("exercise", "high", s),
+        "週150分を超えても、効果はゆるやかに伸びます。無理に増やすより、筋力トレーニングを週2回加えるとバランスが良くなります。",
+        "目標は <b>週300分</b>、または筋トレを週2回追加。");
+    }
+
+    if (s.sleep && s.sleep !== "7") {
+      push("sleep", "睡眠を7〜8時間にする", optD("sleep", "7", s),
+        "睡眠が短すぎても長すぎても、死亡リスクが上がる傾向があります。起きる時刻をそろえ、寝る1時間前から画面を見ないようにすると、睡眠の質が上がります。",
+        "目標は <b>7〜8時間</b>。長く寝ても疲れが取れない場合は、睡眠時無呼吸などの可能性があるため受診を。");
+    }
+
+    if (s.diet && s.diet !== "good") {
+      push("diet", "食事を整える", optD("diet", "good", s),
+        "野菜・果物・魚・大豆・海藻を増やし、加工肉や塩分、甘い飲み物を減らす食事は、心臓病や脳卒中を減らします。いきなり全部を変えず、毎食1品の野菜を足すことから始めます。",
+        "目標は <b>野菜を毎食1品</b>、<b>魚を週2回以上</b>、<b>食塩は1日6〜7g台</b>。");
+    }
+
+    if (s.checkup === "no") {
+      push("checkup", "健診・がん検診を毎年受ける", optD("checkup", "yes", s),
+        "血圧・血糖・コレステロールの異常や、早期のがんは、症状が出る前に見つかることがほとんどです。会社の健診や自治体の検診を毎年受けるだけで、早い対処につながります。",
+        "目標は <b>年1回の健診</b>と、年齢に応じたがん検診(胃・大腸・肺・乳房・子宮頸部など)。");
+    }
+
+    if (s.bp === "ut") {
+      push("bp", "高血圧の治療を始める", optD("bp", "tr", s),
+        "血圧が高い状態が続くと、脳卒中・心筋梗塞・腎臓病のリスクが大きく上がります。家庭血圧を朝晩に測って記録し、医療機関で相談してください。生活習慣の見直しと、必要な場合の薬で、安全に下げられます。",
+        "目標は <b>家庭血圧 135/85未満</b>(医師の指示を優先)。減塩・運動・減量も効果的です。");
+    } else if (s.bp === "hn") {
+      push("bp", "血圧を正常域に戻す", optD("bp", "normal", s),
+        "少し高めの段階なら、生活習慣の見直しだけで正常域に戻せる人が多くいます。減塩、適正体重、運動、節酒が基本です。",
+        "目標は <b>130/85未満</b>。食塩は1日6〜7g台を目安に、家庭血圧も測ってみましょう。");
+    }
+
+    if (s.sugar === "pre") {
+      push("sugar", "糖尿病を予防する", optD("sugar", "normal", s),
+        "予備群の段階で、体重を数%減らし、運動を週150分行うと、糖尿病に進む人が大きく減ることが研究で示されています。",
+        "目標は <b>HbA1c 5.6%以下</b>。体重を3〜7%減らし、食後に軽く歩く習慣を。");
+    } else if (s.sugar === "dmng") {
+      push("sugar", "血糖の管理を見直す", optD("sugar", "dmok", s),
+        "血糖の管理が不十分だと、心臓病・腎臓病・失明・足の壊疽などの合併症が進みます。主治医と治療計画を見直し、食事・運動・薬の調整を相談してください。",
+        "目標は <b>主治医と決めたHbA1c</b>(多くの場合7.0%未満)。通院を途切れさせないことが第一歩です。");
+    }
+
+    if (s.stress === "high") {
+      push("stress", "ストレスを和らげる", optD("stress", "normal", s),
+        "強いストレスが長く続くと、睡眠・食事・飲酒に影響し、心臓病やうつ病のリスクも高まります。運動、休養、誰かに話すことが基本です。つらさが続くときは、産業医、心療内科、地域の相談窓口を頼ってください。",
+        "目標は <b>週に1日は仕事から離れる時間</b>をつくり、信頼できる人に相談すること。");
+    }
+
+    if (s.social === "lonely") {
+      push("social", "人とのつながりを増やす", optD("social", "normal", s),
+        "孤立は、喫煙に近い大きさで死亡リスクを高めるという分析があります。大人数の集まりでなくても、定期的に話す相手が1〜2人いるだけで違います。",
+        "目標は <b>週に1回</b>、誰かと顔を合わせるか話すこと。地域活動、趣味の会、ボランティアも良い入口です。");
+    }
+
+    if (s.ikigai === "none") {
+      push("ikigai", "生きがいを見つける", optD("ikigai", "normal", s),
+        "日本の大規模調査では、生きがいがあると答えた人のほうが、長期の死亡リスクが低い傾向でした。大きな目標でなくても、続けられる楽しみや役割で十分です。",
+        "目標は <b>小さな楽しみを1つ</b>。昔好きだったこと、学び直し、誰かの役に立つ活動から。");
+    }
+
+    list.sort(function (a, b) { return b.gain - a.gain; });
+    return list;
+  }
+
+  /* ---------- UI helpers ---------- */
+  var $ = function (sel) { return document.querySelector(sel); };
+  var form = $("#form");
+  var adviceOff = {};
+  var touched = false;
+  var ctx = null;
+
+  var SAMPLE = {};
+
+  function radioGroup(f) {
+    var h = '<fieldset><legend>' + f.label + '</legend><div class="pills">';
+    for (var i = 0; i < f.options.length; i++) {
+      var o = f.options[i];
+      h += '<label class="pill"><input type="radio" name="' + f.id + '" value="' + o.v + '"' + (SAMPLE[f.id] === o.v ? " checked" : "") + '><span>' + o.t + '</span></label>';
+    }
+    h += '</div>' + (f.hint ? '<p class="hint">' + f.hint + '</p>' : '') + '</fieldset>';
+    return h;
+  }
+
+  function buildForm() {
+    var basic = '<h2>基本情報</h2>' +
+      '<fieldset><legend>性別</legend><div class="pills">' +
+      '<label class="pill"><input type="radio" name="sex" value="M"><span>男性</span></label>' +
+      '<label class="pill"><input type="radio" name="sex" value="F"><span>女性</span></label>' +
+      '</div></fieldset>' +
+      '<div class="nums">' +
+      '<div class="num-field"><label for="age">年齢</label><input id="age" name="age" type="number" inputmode="numeric" min="18" max="100" step="1" value=""></div>' +
+      '<div class="num-field"><label for="height">身長(cm)</label><input id="height" name="height" type="number" inputmode="decimal" min="120" max="220" step="0.1" value=""></div>' +
+      '<div class="num-field"><label for="weight">体重(kg)</label><input id="weight" name="weight" type="number" inputmode="decimal" min="30" max="250" step="0.1" value=""></div>' +
+      '</div><p class="bmi-read" id="bmiRead"></p><p class="form-note" id="formNote" hidden></p>';
+    $("#g-basic").innerHTML = basic;
+
+    var groups = { life: '<h2>生活習慣</h2>', health: '<h2>健康状態</h2>', mind: '<h2>こころと環境</h2>' };
+    for (var i = 0; i < FACTORS.length; i++) groups[FACTORS[i].group] += radioGroup(FACTORS[i]);
+    var cond = '<fieldset><legend>これまでにかかった病気(当てはまるものすべて)</legend><div class="pills">';
+    for (var j = 0; j < CONDS.length; j++) {
+      cond += '<label class="pill"><input type="checkbox" name="cond" value="' + CONDS[j].v + '"><span>' + CONDS[j].t + '</span></label>';
+    }
+    cond += '</div><p class="hint">なければ何も選ばなくて構いません。</p></fieldset>';
+    groups.health += cond;
+    $("#g-life").innerHTML = groups.life;
+    $("#g-health").innerHTML = groups.health;
+    $("#g-mind").innerHTML = groups.mind;
+  }
+
+  function readState() {
+    var s = {
+      sex: form.elements.sex.value || "",
+      age: parseFloat(form.elements.age.value),
+      height: parseFloat(form.elements.height.value),
+      weight: parseFloat(form.elements.weight.value),
+      cond: []
+    };
+    for (var i = 0; i < FACTORS.length; i++) s[FACTORS[i].id] = form.elements[FACTORS[i].id].value;
+    var cs = form.querySelectorAll('input[name="cond"]:checked');
+    for (var j = 0; j < cs.length; j++) s.cond.push(cs[j].value);
+    return s;
+  }
+
+  function fmtYears(x) { return (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(1) + "年"; }
+  function fmtProb(p) {
+    if (p < 0.005) return "1%未満";
+    if (p > 0.995) return "99%超";
+    return Math.round(p * 100) + "%";
+  }
+
+  /* ---------- rendering ---------- */
+  function renderGlass(s, cur, imp) {
+    var GP = "M30 20H170C170 90 112 120 106 140C112 160 170 190 170 260H30C30 190 88 160 94 140C88 120 30 90 30 20Z";
+    var age = s.age, rem = cur.c.mean, remF = rem / (age + rem), ageF = age / (age + rem), H = 120;
+    var impF = imp ? imp.c.mean / (age + imp.c.mean) : remF;
+    if (impF < remF) impF = remF;
+    var topY = 140 - remF * H, gainY = 140 - impF * H, botY = 260 - ageF * H;
+    var svg = '<svg viewBox="0 0 200 280" role="img" aria-label="砂時計。経過' + Math.round(age) + '年、のこり約' + Math.round(rem) + '年">' +
+      '<defs><clipPath id="gc"><path d="' + GP + '"/></clipPath></defs>' +
+      '<g clip-path="url(#gc)">' +
+      '<rect class="sg" x="0" y="' + gainY.toFixed(1) + '" width="200" height="' + (140 - gainY).toFixed(1) + '"/>' +
+      '<rect class="sa" x="0" y="' + topY.toFixed(1) + '" width="200" height="' + (140 - topY).toFixed(1) + '"/>' +
+      '<rect class="sa" x="0" y="' + botY.toFixed(1) + '" width="200" height="' + (260 - botY).toFixed(1) + '"/></g>' +
+      '<line class="stream" x1="100" x2="100" y1="138" y2="' + botY.toFixed(1) + '"/>' +
+      '<path class="gl-outline" d="' + GP + '"/>' +
+      '<rect class="cap" x="20" y="10" width="160" height="10" rx="3"/><rect class="cap" x="20" y="260" width="160" height="10" rx="3"/></svg>';
+    var gain = imp ? imp.c.mean - rem : 0;
+    svg += '<div class="gcap"><span>のこり<b>約' + Math.round(rem) + '年</b></span><span>経過<b>' + Math.round(age) + '年</b></span></div>';
+    if (gain >= 0.05) svg += '<div class="gcap"><span class="g">緑 = 実行で増える砂 ' + fmtYears(gain) + '</span></div>';
+    $("#glass").innerHTML = svg;
+  }
+
+  function renderSummary(s, base, cur, imp) {
+    renderDayCount();
+    var age = s.age;
+    var death = age + cur.c.mean;
+    var avgDeath = age + base.mean;
+    var diff = cur.c.mean - base.mean;
+
+    $("#heroNum").textContent = Math.round(cur.c.mean);
+    renderGlass(s, cur, imp);
+    var diffCls = diff >= 0 ? "up" : "down";
+    $("#heroLead").innerHTML = "推定寿命は約 <b>" + Math.round(death) + "歳</b>。同じ年齢・性別の平均より <span class=\"" + diffCls + "\">" + fmtYears(diff) + "</span>";
+
+    // ruler
+    var lo = Math.floor(age / 10) * 10;
+    var maxV = Math.max(death, avgDeath, imp ? age + imp.c.mean : 0);
+    var hi = maxV > 104 ? 120 : 110;
+    var P = function (v) { return Math.min(100, Math.max(0, (v - lo) / (hi - lo) * 100)); };
+    var tickStep = (hi - lo) > 70 ? 20 : 10;
+    var scale = "", grid = "", t;
+    for (t = lo; t <= hi; t += tickStep) {
+      scale += '<span style="left:' + P(t) + '%">' + t + '</span>';
+      grid += '<i class="gl" style="left:' + P(t) + '%"></i>';
+    }
+    grid += '<i class="gl now" style="left:' + P(age) + '%"></i>';
+    function row(label, val, cls) {
+      var l = P(age), w = P(val) - P(age);
+      return '<div class="row"><div class="rowhead"><span>' + label + '</span><b>' + Math.round(val) + '歳</b></div>' +
+        '<div class="track"><i class="bar ' + cls + '" style="left:' + l + '%;width:' + w + '%"></i></div></div>';
+    }
+    var rows = row("平均的な人(同性・同年齢)", avgDeath, "avg") + row("あなたの現状", death, "cur");
+    if (imp) rows += row("アドバイスを実行すると", age + imp.c.mean, "imp");
+    var pa = P(age);
+    var nowStyle = pa < 14 ? "left:" + pa + "%" : (pa > 86 ? "left:" + pa + "%;transform:translateX(-100%)" : "left:" + pa + "%;transform:translateX(-50%)");
+    $("#ruler").innerHTML = '<div class="scale">' + scale + '</div><div class="rows">' + grid + rows + '</div>' +
+      '<div class="nowlabel"><span style="' + nowStyle + '">いま ' + Math.round(age) + '歳</span></div>';
+
+    // stats
+    var cand = [80, 85, 90, 95, 100].filter(function (a) { return a > age + 1; });
+    var marks = cand;
+    if (cand.length > 3) marks = [cand[0], cand[Math.floor((cand.length - 1) / 2)], cand[cand.length - 1]];
+    var st = '<div><dt>半数が生きる年齢(中央値)</dt><dd>' + Math.round(age + cur.c.median) + '歳' +
+      (imp ? '<small>→ ' + Math.round(age + imp.c.median) + '歳</small>' : '') + '</dd></div>';
+    for (var i = 0; i < marks.length && i < 2; i++) {
+      var a = marks[i + (marks.length > 2 ? 0 : 0)];
+      st += '<div><dt>' + a + '歳まで生きる確率</dt><dd>' + fmtProb(cur.c.at(a)) +
+        (imp ? '<small>→ ' + fmtProb(imp.c.at(a)) + '</small>' : '') + '</dd></div>';
+    }
+    $("#stats").innerHTML = st;
+  }
+
+  function renderAdvice(s, cur, imps) {
+    var el = $("#adviceList");
+    if (!imps.length) {
+      el.innerHTML = '<p class="ok-msg">現在の入力内容では、大きな改善余地は見つかりませんでした。いまの習慣を続けてください。健診で数値を確認することも忘れずに。</p>';
+      $("#totalLine").hidden = true;
+      return;
+    }
+    var h = '<ul class="tips">';
+    for (var i = 0; i < imps.length; i++) {
+      var m = imps[i];
+      h += '<li class="tip"><h3>' + m.title + '</h3><span class="tip-gain">+' + m.gain.toFixed(1) + '年</span>' +
+        '<p class="tip-body">' + m.body + '</p>' +
+        '<div class="tip-foot"><p class="goal">' + m.goal + '</p>' +
+        '<label class="pill on"><input type="checkbox" data-adv="' + m.id + '"' + (adviceOff[m.id] ? "" : " checked") + '><span>実行する</span></label></div></li>';
+    }
+    h += '</ul>';
+    el.innerHTML = h;
+  }
+
+  function renderTotal(s, base, cur, imp) {
+    var el = $("#totalLine");
+    if (!imp) { el.hidden = true; return; }
+    var g = imp.c.mean - cur.c.mean;
+    el.hidden = false;
+    el.innerHTML = "選んだ項目をすべて実行すると、推定寿命は <b>" + Math.round(s.age + cur.c.mean) + "歳 → " + Math.round(s.age + imp.c.mean) + "歳</b>(" + fmtYears(g) + ")。複数の効果は重なりを考慮して控えめに計算しています。";
+  }
+
+  function renderFactors(s, cur) {
+    var rows = [];
+    for (var i = 0; i < cur.parts.length; i++) {
+      var p = cur.parts[i];
+      if (Math.abs(p.d) < 0.001) continue;
+      var ov = {}; ov[p.id] = 0;
+      var eff = cur.c.mean - calc(s, ov).c.mean;
+      if (Math.abs(eff) < 0.05) continue;
+      rows.push({ label: p.label, text: p.text, eff: eff });
+    }
+    rows.sort(function (a, b) { return Math.abs(b.eff) - Math.abs(a.eff); });
+    var el = $("#factors");
+    if (!rows.length) { el.innerHTML = '<p class="ok-msg">平均から大きくずれている項目はありません。</p>'; return; }
+    var mx = Math.max.apply(null, rows.map(function (r) { return Math.abs(r.eff); }));
+    var h = "";
+    for (var k = 0; k < rows.length; k++) {
+      var r = rows[k];
+      var w = Math.abs(r.eff) / mx * 50;
+      h += '<div class="frow"><div class="fl"><b>' + r.label + '</b><span>' + r.text + '</span></div>' +
+        '<div class="dv"><i class="' + (r.eff >= 0 ? "pos" : "neg") + '" style="width:' + w + '%"></i></div>' +
+        '<div class="fv ' + (r.eff >= 0 ? "up" : "down") + '">' + fmtYears(r.eff) + '</div></div>';
+    }
+    el.innerHTML = h;
+  }
+
+  function risks(s) {
+    var age = s.age, bmi = bmiOf(s), F = s.sex === "F";
+    var smk = s.smoke === "low" || s.smoke === "mid" || s.smoke === "high";
+    var dm = s.sugar === "dmok" || s.sugar === "dmng";
+    var alc2 = s.alcohol === "d2" || s.alcohol === "d3";
+    var bad = s.bp === "ut" || s.bp === "tr" || s.bp === "hn";
+    var sed = s.exercise === "none";
+    var shortSleep = s.sleep === "lt5";
+    var has = function (c) { return s.cond.indexOf(c) >= 0; };
+    function mk(name, tip) { return { name: name, tip: tip, pts: 0, why: [] }; }
+    function a(o, p, w) { o.pts += p; o.why.push(w); }
+
+    var heart = mk("心筋梗塞・狭心症", "血圧・血糖・コレステロールの管理と、禁煙、週150分の運動が基本です。胸の痛みや締めつけ感は早めに受診を。");
+    if (smk) a(heart, 2, "喫煙"); else if (s.smoke === "exrecent") a(heart, 1, "禁煙して日が浅い");
+    if (s.bp === "ut") a(heart, 2, "未治療の高血圧"); else if (bad) a(heart, 1, "血圧が高め");
+    if (s.sugar === "dmng") a(heart, 2, "血糖の管理が不十分"); else if (dm || s.sugar === "pre") a(heart, 1, "血糖が高め");
+    if (bmi >= 30) a(heart, 1, "肥満");
+    if (s.family === "early") a(heart, 1, "家族に早世の人");
+    if (s.diet === "poor") a(heart, 1, "偏った食事");
+    if (sed) a(heart, 1, "運動不足");
+    if (s.stress === "high") a(heart, 1, "強いストレス");
+    if (has("heart")) a(heart, 2, "心臓病の既往");
+    if (heart.pts > 0 && age >= 55) a(heart, 1, "年齢");
+
+    var stroke = mk("脳卒中", "家庭血圧を測り、減塩と節酒を。顔のゆがみ・ろれつ・片腕の力が入らないときは、すぐ救急要請を。");
+    if (s.bp === "ut") a(stroke, 3, "未治療の高血圧"); else if (bad) a(stroke, 1, "血圧が高め");
+    if (smk) a(stroke, 2, "喫煙");
+    if (s.alcohol === "d3") a(stroke, 2, "大量の飲酒"); else if (s.alcohol === "d2") a(stroke, 1, "多めの飲酒");
+    if (s.diet === "poor") a(stroke, 1, "塩分の多い食事");
+    if (dm) a(stroke, 1, "糖尿病");
+    if (s.family === "early") a(stroke, 1, "家族に早世の人");
+    if (has("stroke")) a(stroke, 2, "脳卒中の既往");
+    if (stroke.pts > 0 && age >= 55) a(stroke, 1, "年齢");
+
+    var dm2 = mk("2型糖尿病", "体重を数%減らし、食後に歩く習慣を。年1回の健診でHbA1cを確認します。");
+    if (s.sugar === "pre") a(dm2, 2, "血糖が予備群");
+    if (bmi >= 30) a(dm2, 2, "肥満"); else if (bmi >= 27) a(dm2, 1, "体重が多め");
+    if (sed) a(dm2, 1, "運動不足");
+    if (s.diet === "poor") a(dm2, 1, "偏った食事");
+    if (s.sleep === "lt5" || s.sleep === "9") a(dm2, 1, "睡眠の過不足");
+    if (age >= 45 && dm2.pts > 0) a(dm2, 1, "年齢");
+
+    var cancer = mk("がん(肺・大腸・肝臓・食道など)", "禁煙・節酒に加え、年齢に応じたがん検診を毎年受けることが最も確実な備えです。");
+    if (smk) a(cancer, 2, "喫煙(肺・食道など)"); else if (s.smoke === "exrecent") a(cancer, 1, "禁煙して日が浅い");
+    if (alc2) a(cancer, 2, "多めの飲酒(食道・大腸・肝臓)"); else if (s.alcohol === "d1") a(cancer, 1, "毎日の飲酒");
+    if (bmi >= 30) a(cancer, 1, "肥満");
+    if (s.diet === "poor") a(cancer, 1, "偏った食事");
+    if (s.checkup === "no") a(cancer, 1, "検診を受けていない");
+    if (s.family === "early") a(cancer, 1, "家族に早世の人");
+    if (has("cancer")) a(cancer, 2, "がんの既往(再発・別のがん)");
+    if (cancer.pts > 0 && age >= 55) a(cancer, 1, "年齢");
+
+    var lung = mk("COPD・慢性の肺の病気", "禁煙が最大の予防です。長引く咳・痰・息切れは早めに呼吸器の受診を。");
+    if (s.smoke === "mid" || s.smoke === "high") a(lung, 3, "喫煙量が多い"); else if (s.smoke === "low") a(lung, 2, "喫煙");
+    else if (s.smoke === "exrecent") a(lung, 1, "禁煙して日が浅い");
+    if (has("copd")) a(lung, 2, "肺疾患の既往");
+
+    var htn = mk("高血圧", "食塩は1日6〜7g台、適正体重、節酒、運動。朝晩の家庭血圧を記録しましょう。");
+    if (s.bp === "ut") a(htn, 3, "すでに140/90以上"); else if (s.bp === "tr") a(htn, 1, "治療中"); else if (s.bp === "hn") a(htn, 2, "血圧がやや高め");
+    if (bmi >= 27) a(htn, 1, "体重が多め");
+    if (s.diet === "poor") a(htn, 1, "塩分の多い食事");
+    if (alc2) a(htn, 1, "多めの飲酒");
+    if (sed) a(htn, 1, "運動不足");
+    if (shortSleep) a(htn, 1, "睡眠不足");
+    if (s.stress === "high") a(htn, 1, "強いストレス");
+
+    var lipid = mk("脂質異常症・脂肪肝", "腹八分目と、揚げ物・甘い飲み物・飲酒の見直しで改善しやすい項目です。");
+    if (bmi >= 27) a(lipid, 2, "体重が多め");
+    if (alc2) a(lipid, 1, "多めの飲酒");
+    if (s.diet === "poor") a(lipid, 1, "偏った食事");
+    if (sed) a(lipid, 1, "運動不足");
+
+    var mind = mk("うつ・不安などこころの不調", "睡眠・運動・人に話すことが土台です。2週間以上つらい状態が続くときは、早めに専門家へ。");
+    if (s.stress === "high") a(mind, 2, "強く長いストレス");
+    if (s.social === "lonely") a(mind, 2, "人との交流が少ない");
+    if (shortSleep) a(mind, 1, "睡眠不足");
+    if (s.ikigai === "none") a(mind, 1, "生きがいがない");
+
+    var bone = mk("骨粗しょう症・筋力低下(フレイル)", "たんぱく質とカルシウムをとり、筋トレと日光浴を。骨密度検査も選択肢です。");
+    if (age >= 45) {
+      if (F && age >= 45) a(bone, 2, "女性・閉経前後以降");
+      if (age >= 60) a(bone, 1, "年齢");
+      if (sed) a(bone, 1, "運動不足");
+      if (bmi < 18.5) a(bone, 2, "やせ");
+      if (smk) a(bone, 1, "喫煙");
+      if (s.alcohol === "d3") a(bone, 1, "大量の飲酒");
+    }
+
+    var dem = mk("認知症", "運動、人との交流、血圧管理、十分な睡眠が、いずれも予防につながります。");
+    if (age >= 50) {
+      if (age >= 65) a(dem, 1, "年齢");
+      if (s.social === "lonely") a(dem, 1, "人との交流が少ない");
+      if (sed) a(dem, 1, "運動不足");
+      if (bad) a(dem, 1, "血圧が高め");
+      if (s.sleep === "lt5" || s.sleep === "9") a(dem, 1, "睡眠の過不足");
+      if (smk) a(dem, 1, "喫煙");
+      if (has("stroke")) a(dem, 1, "脳卒中の既往");
+    }
+
+    var apnea = mk("睡眠時無呼吸症候群", "いびき・日中の強い眠気があれば、検査を。減量と飲酒量の見直しで軽くなることもあります。");
+    if (bmi >= 30) a(apnea, 2, "肥満"); else if (bmi >= 27) a(apnea, 1, "体重が多め");
+    if (alc2) a(apnea, 1, "多めの飲酒");
+    if (s.sleep === "9") a(apnea, 1, "長く寝ても眠い可能性");
+    if (!F && age >= 40) a(apnea, 1, "男性・40歳以上");
+
+    var ckd = mk("慢性腎臓病", "血圧と血糖の管理、減塩が大切です。健診の尿検査・クレアチニンを毎年確認します。");
+    if (s.bp === "ut") a(ckd, 2, "未治療の高血圧"); else if (bad) a(ckd, 1, "血圧が高め");
+    if (dm) a(ckd, 2, "糖尿病");
+    if (bmi >= 30) a(ckd, 1, "肥満");
+    if (smk) a(ckd, 1, "喫煙");
+    if (has("ckd")) a(ckd, 2, "腎臓病の既往");
+
+    function pick(list, n) {
+      return list.filter(function (o) { return o.pts >= 2; }).sort(function (x, y) { return y.pts - x.pts; }).slice(0, n);
+    }
+    return {
+      diseases: pick([heart, stroke, dm2, cancer, lung, htn, lipid, mind, bone, dem, apnea, ckd], 6)
+    };
+  }
+
+  function riskHtml(list, empty) {
+    if (!list.length) return '<p class="ok-msg">' + empty + '</p>';
+    var h = '<ul class="rk">';
+    for (var i = 0; i < list.length; i++) {
+      var o = list[i], hi = o.pts >= 4;
+      h += '<li><div class="rk-h"><b>' + o.name + '</b><span class="lv ' + (hi ? "hi" : "mid") + '">' + (hi ? "高め" : "やや高め") + '</span></div>' +
+        '<p class="rk-why">理由: ' + o.why.join("、") + '</p><p class="rk-tip">' + o.tip + '</p></li>';
+    }
+    return h + '</ul>';
+  }
+
+  function renderRisks(s) {
+    var r = risks(s);
+    $("#diseaseList").innerHTML = riskHtml(r.diseases, "入力内容からは、とくに目立つ偏りは見当たりませんでした。");
+  }
+
+  function scenarioOverrides(imps) {
+    var ov = {}, any = false;
+    for (var i = 0; i < imps.length; i++) {
+      if (!adviceOff[imps[i].id]) { ov[imps[i].id] = imps[i].toD; any = true; }
+    }
+    return any ? ov : null;
+  }
+
+  function updateResults() {
+    if (!ctx) return;
+    var s = ctx.s;
+    var ov = scenarioOverrides(ctx.imps);
+    var imp = ov ? calc(s, ov) : null;
+    renderSummary(s, ctx.base, ctx.cur, imp);
+    renderTotal(s, ctx.base, ctx.cur, imp);
+  }
+
+  function updateAll() {
+    var s = readState();
+    var ok = isValid(s);
+    var bmiEl = $("#bmiRead"), note = $("#formNote");
+    if (s.height >= 120 && s.height <= 220 && s.weight >= 30 && s.weight <= 250) {
+      var b = bmiOf(s);
+      bmiEl.innerHTML = "BMI <b>" + b.toFixed(1) + "</b>(" + (b < 18.5 ? "低体重" : b < 25 ? "標準" : b < 30 ? "肥満(1度)" : "肥満(2度以上)") + ")";
+    } else {
+      bmiEl.textContent = "";
+    }
+    var typed = form.elements.age.value !== "" || form.elements.height.value !== "" || form.elements.weight.value !== "";
+    var numsOk = s.age >= 18 && s.age <= 100 && s.height >= 120 && s.height <= 220 && s.weight >= 30 && s.weight <= 250;
+    if (!ok && typed) {
+      note.hidden = false;
+      note.textContent = numsOk ? "性別を選んでください。" : "年齢は18〜100歳、身長は120〜220cm、体重は30〜250kgの範囲で入力してください。";
+    } else {
+      note.hidden = true;
+    }
+    $("#showResults").disabled = !ok;
+    $("#emptyMsg").hidden = ok;
+    if (!ok) { ctx = null; return; }
+    var profileKey = JSON.stringify(s);
+    var savedData = loadStore();
+    if (!savedData.ageAnchor) { savedData.ageAnchor = Date.now(); saveStore(savedData); }
+    s.age += Math.max(0, Date.now() - savedData.ageAnchor) / 86400000 / 365.2425;    var base = curve(s.sex, s.age, 0);
+    var cur = calc(s, null);
+    if (savedData.countdownProfile !== profileKey || !savedData.countdownEndAt) {
+      var targetDate = new Date(); targetDate.setHours(0, 0, 0, 0); targetDate.setDate(targetDate.getDate() + Math.max(0, Math.round(cur.c.mean * 365.2425)));
+      savedData.countdownProfile = profileKey; savedData.countdownEndAt = targetDate.getTime(); saveStore(savedData);
+    }
+    var imps = improvements(s, cur);
+    ctx = { s: s, base: base, cur: cur, imps: imps };
+    renderAdvice(s, cur, imps);
+    renderFactors(s, cur);
+    renderRisks(s);
+    updateResults();
+  }
+
+  var STORE_KEY="ino-sunadokei-v1";
+  function loadStore(){try{return JSON.parse(localStorage.getItem(STORE_KEY)||"{}");}catch(e){return {};}}
+  function saveStore(data){try{localStorage.setItem(STORE_KEY,JSON.stringify(data));}catch(e){}}
+  function restoreAnswers(){var saved=loadStore().answers||{};Object.keys(saved).forEach(function(name){var fields=form.elements[name];if(!fields)return;var list=fields.length&&!fields.tagName?Array.prototype.slice.call(fields):[fields];list.forEach(function(el){if(el.type==="radio"||el.type==="checkbox")el.checked=saved[name].indexOf(el.value)>=0;else el.value=saved[name][0]||"";});});}
+  function saveAnswers(){var data=loadStore(),answers={};Array.prototype.forEach.call(form.elements,function(el){if(!el.name)return;if(!answers[el.name])answers[el.name]=[];if((el.type==="radio"||el.type==="checkbox")&&el.checked)answers[el.name].push(el.value);else if(el.type!=="radio"&&el.type!=="checkbox")answers[el.name].push(el.value);});data.answers=answers;saveStore(data);}
+  function renderDayCount(){
+    var end=loadStore().countdownEndAt,now=new Date();now.setHours(0,0,0,0);
+    var value=end?Math.max(0,Math.ceil((end-now.getTime())/86400000)).toLocaleString("ja-JP"):"--";if($("#dayCount").textContent!==value)$("#dayCount").textContent=value;
+    if(!window.dayCountTimer)window.dayCountTimer=window.setInterval(renderDayCount,60000);
+  }
+  function showPage(which) {
+    var results = which === "results";
+    $("#surveyPage").hidden = results;
+    $("#resultsPage").hidden = !results;
+    window.scrollTo(0, 0);
+  }
+  $("#showResults").addEventListener("click", function () { if (ctx) showPage("results"); });
+  $("#editAnswers").addEventListener("click", function () { showPage("survey"); });
+  buildForm();
+  restoreAnswers();
+  form.addEventListener("input", function () { touched = true; saveAnswers(); updateAll(); });
+  $("#adviceList").addEventListener("change", function (e) {
+    var id = e.target && e.target.getAttribute("data-adv");
+    if (!id) return;
+    adviceOff[id] = !e.target.checked;
+    updateResults();
+  });
+  updateAll();
+})();
+</script>
+
+</body></html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
